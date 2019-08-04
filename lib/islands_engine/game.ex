@@ -66,7 +66,7 @@ defmodule IslandsEngine.Game do
       state_data
       |> update_board(player, board)
       |> update_rules(rules)
-      |> reply_success(:ok)
+      |> reply_success({:ok, board})
     else
       :error -> reply_error(state_data, :error)
       {:error, :invalid_coordinate} -> reply_error(state_data, {:error, :invalid_coordinate})
