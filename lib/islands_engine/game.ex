@@ -12,12 +12,14 @@ defmodule IslandsEngine.Game do
   def start_link(name) when is_binary(name),
     do: GenServer.start_link(__MODULE__, name, name: via_tuple(name))
 
+  @impl true
   def init(name) do
     send(self(), {:set_state, name})
 
     {:ok, fresh_state(name)}
   end
 
+  @impl true
   def terminate({:shutdown, :timeout}, state_data) do
     :ets.delete(:game_state, state_data.player1.name)
     :ok
@@ -25,6 +27,7 @@ defmodule IslandsEngine.Game do
 
   def terminate(_reason, _state), do: :ok
 
+  @impl true
   def handle_info({:set_state, name}, _state_data) do
     state_data =
       case :ets.lookup(:game_state, name) do
@@ -36,9 +39,11 @@ defmodule IslandsEngine.Game do
     {:noreply, state_data, @timeout}
   end
 
+  @impl true
   def handle_info(:timeout, state_data),
     do: {:stop, {:shutdown, :timeout}, state_data}
 
+  @impl true
   def handle_call({:add_player, name}, _from, state_data) do
     with {:ok, rules} <- Rules.check(state_data.rules, :add_player) do
       state_data
@@ -50,6 +55,7 @@ defmodule IslandsEngine.Game do
     end
   end
 
+  @impl true
   def handle_call({:position_island, player, key, row, col}, _from, state_data) do
     board = player_board(state_data, player)
 
@@ -69,6 +75,7 @@ defmodule IslandsEngine.Game do
     end
   end
 
+  @impl true
   def handle_call({:set_islands, player}, _from, state_data) do
     board = player_board(state_data, player)
 
@@ -83,6 +90,7 @@ defmodule IslandsEngine.Game do
     end
   end
 
+  @impl true
   def handle_call({:guess_coordinate, player_key, row, col}, _from, state_data) do
     opponent_key = opponent(player_key)
     opponent_board = player_board(state_data, opponent_key)
@@ -103,15 +111,30 @@ defmodule IslandsEngine.Game do
     end
   end
 
+  @doc """
+  Adds a second player to the game
+  """
   def add_player(game, name) when is_binary(name),
     do: GenServer.call(game, {:add_player, name})
 
+  @doc """
+  Positions a given island using the row and column
+  as the upperleft coordinate for the island
+  """
   def position_island(game, player, key, row, col) when player in @players,
     do: GenServer.call(game, {:position_island, player, key, row, col})
 
+  @doc """
+  Indicates a given player has finished
+  positioning his islands
+  """
   def set_islands(game, player) when player in @players,
     do: GenServer.call(game, {:set_islands, player})
 
+  @doc """
+  Guesses a coordinate on the opponent's board.
+  There are multiple outcomes to this action...
+  """
   def guess_coordinate(game, player, row, col) when player in @players,
     do: GenServer.call(game, {:guess_coordinate, player, row, col})
 
