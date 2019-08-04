@@ -104,7 +104,7 @@ defmodule IslandsEngine.Game do
       |> update_board(opponent_key, opponent_board)
       |> update_guesses(player_key, hit_or_miss, coordinate)
       |> update_rules(rules)
-      |> reply_success({hit_or_miss, forested_island, win_status})
+      |> reply_success({hit_or_miss, forested_island, win_status, opponent_board})
     else
       :error -> reply_error(state_data, :error)
       {:error, :invalid_coordinate} -> reply_error(state_data, {:error, :invalid_coordinate})
